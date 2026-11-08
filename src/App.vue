@@ -249,12 +249,12 @@ onMounted(async () => {
                   role="switch"
                   :aria-checked="config.settings.bypass_lan"
                   @click="config.settings.bypass_lan = !config.settings.bypass_lan; saveAllConfig()"
-                  class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-                  :class="config.settings.bypass_lan ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 shadow-sm shadow-cyan-500/30' : 'bg-slate-800'"
+                  class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                  :class="config.settings.bypass_lan ? 'bg-cyan-500 shadow-sm shadow-cyan-500/30' : 'bg-slate-800'"
                 >
                   <span
-                    class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out"
-                    :class="config.settings.bypass_lan ? 'translate-x-5' : 'translate-x-0'"
+                    class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out"
+                    :class="config.settings.bypass_lan ? 'translate-x-4' : 'translate-x-0'"
                   />
                 </button>
               </div>
@@ -272,12 +272,12 @@ onMounted(async () => {
                   role="switch"
                   :aria-checked="config.settings.block_udp_443"
                   @click="config.settings.block_udp_443 = !config.settings.block_udp_443; saveAllConfig()"
-                  class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-                  :class="config.settings.block_udp_443 ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 shadow-sm shadow-cyan-500/30' : 'bg-slate-800'"
+                  class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                  :class="config.settings.block_udp_443 ? 'bg-cyan-500 shadow-sm shadow-cyan-500/30' : 'bg-slate-800'"
                 >
                   <span
-                    class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out"
-                    :class="config.settings.block_udp_443 ? 'translate-x-5' : 'translate-x-0'"
+                    class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out"
+                    :class="config.settings.block_udp_443 ? 'translate-x-4' : 'translate-x-0'"
                   />
                 </button>
               </div>
@@ -295,12 +295,12 @@ onMounted(async () => {
                   role="switch"
                   :aria-checked="config.settings.minimize_to_tray"
                   @click="config.settings.minimize_to_tray = !config.settings.minimize_to_tray; saveAllConfig()"
-                  class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-                  :class="config.settings.minimize_to_tray ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 shadow-sm shadow-cyan-500/30' : 'bg-slate-800'"
+                  class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                  :class="config.settings.minimize_to_tray ? 'bg-cyan-500 shadow-sm shadow-cyan-500/30' : 'bg-slate-800'"
                 >
                   <span
-                    class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out"
-                    :class="config.settings.minimize_to_tray ? 'translate-x-5' : 'translate-x-0'"
+                    class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out"
+                    :class="config.settings.minimize_to_tray ? 'translate-x-4' : 'translate-x-0'"
                   />
                 </button>
               </div>
@@ -318,12 +318,12 @@ onMounted(async () => {
                   role="switch"
                   :aria-checked="config.settings.auto_start"
                   @click="onToggleAutoStart"
-                  class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-                  :class="config.settings.auto_start ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 shadow-sm shadow-cyan-500/30' : 'bg-slate-800'"
+                  class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                  :class="config.settings.auto_start ? 'bg-cyan-500 shadow-sm shadow-cyan-500/30' : 'bg-slate-800'"
                 >
                   <span
-                    class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out"
-                    :class="config.settings.auto_start ? 'translate-x-5' : 'translate-x-0'"
+                    class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out"
+                    :class="config.settings.auto_start ? 'translate-x-4' : 'translate-x-0'"
                   />
                 </button>
               </div>
