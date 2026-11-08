@@ -66,7 +66,7 @@ fn update_tray_ui(app: &AppHandle, running: bool) {
     }
     if let Some(tray) = app.tray_by_id("main_tray") {
         let tip = if running {
-            "Marga - 代理服务运行中"
+            "Marga - 代理服务运行中 (已接管)"
         } else {
             "Marga - 代理已停止"
         };

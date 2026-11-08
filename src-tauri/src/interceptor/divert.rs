@@ -312,11 +312,19 @@ impl DivertWorker {
         }
     }
 
-    /// Drop QUIC (UDP 443) of matched processes so they fall back to TCP (F-27).
+    /// Drop QUIC (UDP 443) or DNS (UDP 53) of matched processes (F-27).
     fn process_udp(&self, pkt: &Packet, p: &[u8]) -> Verdict {
-        if pkt.dst_port(p) != 443 || !self.config.read().settings.block_udp_443 {
+        let dst_port = pkt.dst_port(p);
+        let settings = {
+            let config = self.config.read();
+            (config.settings.block_udp_443, config.settings.block_udp_53)
+        };
+
+        let should_check = (dst_port == 443 && settings.0) || (dst_port == 53 && settings.1);
+        if !should_check {
             return Verdict::Pass;
         }
+
         match ProcessManager::find_pid_by_port(Transport::Udp, pkt.ipv6, pkt.src_port(p)) {
             Some(pid) if self.match_pid(pid).is_some() => Verdict::Drop,
             _ => Verdict::Pass,

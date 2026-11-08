@@ -31,6 +31,7 @@ export interface DomainRule {
 export interface AppSettings {
   bypass_lan: boolean;
   block_udp_443: boolean;
+  block_udp_53?: boolean;
   auto_start: boolean;
   minimize_to_tray: boolean;
 }

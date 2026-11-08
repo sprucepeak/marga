@@ -1,14 +1,38 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { ConnectionLog } from '../types';
 import { listen, UnlistenFn } from '@tauri-apps/api/event';
-import { Activity, Trash2, CheckCircle2, XCircle, Clock } from 'lucide-vue-next';
+import { Activity, Trash2, CheckCircle2, XCircle, Clock, Search, Pin, Globe } from 'lucide-vue-next';
+
+const emit = defineEmits<{
+  (e: 'addProcessRule', path: string): void;
+  (e: 'addDomainRule', domain: string): void;
+}>();
 
 const logs = ref<ConnectionLog[]>([]);
 const autoScroll = ref(true);
+const searchQuery = ref('');
 const logContainer = ref<HTMLDivElement | null>(null);
 
 let unlisten: UnlistenFn | null = null;
+
+const filteredLogs = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase();
+  if (!q) return logs.value;
+  return logs.value.filter(
+    (l) =>
+      l.process_name.toLowerCase().includes(q) ||
+      l.target.toLowerCase().includes(q) ||
+      String(l.pid).includes(q)
+  );
+});
+
+function extractDomain(target: string): string | null {
+  const host = target.split(':')[0].trim();
+  // If host is an IP address, return null
+  if (/^(\d{1,3}\.){3}\d{1,3}$/.test(host)) return null;
+  return host || null;
+}
 
 onMounted(async () => {
   unlisten = await listen<ConnectionLog>('new-connection-log', (event) => {
@@ -23,7 +47,7 @@ onMounted(async () => {
       }
     }
 
-    if (autoScroll.value) {
+    if (autoScroll.value && !searchQuery.value.trim()) {
       nextTick(() => {
         if (logContainer.value) {
           logContainer.value.scrollTop = logContainer.value.scrollHeight;
@@ -47,8 +71,8 @@ function clearLogs() {
 <template>
   <div class="h-full flex flex-col p-6 space-y-4">
     <!-- Header -->
-    <div class="flex items-center justify-between pb-3 border-b border-cyan-950/40">
-      <div class="flex items-center space-x-2.5">
+    <div class="flex items-center justify-between gap-4 pb-3 border-b border-cyan-950/40">
+      <div class="flex items-center space-x-2.5 shrink-0">
         <Activity class="w-5 h-5 text-cyan-400" />
         <div>
           <h2 class="text-sm font-semibold text-white">实时连接日志</h2>
@@ -56,7 +80,18 @@ function clearLogs() {
         </div>
       </div>
 
-      <div class="flex items-center space-x-4">
+      <!-- Search filter -->
+      <div class="relative flex-1 max-w-xs">
+        <Search class="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="过滤进程、域名或 PID..."
+          class="w-full bg-[#080d1a] border border-slate-700/80 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
+        />
+      </div>
+
+      <div class="flex items-center space-x-4 shrink-0">
         <label class="flex items-center space-x-2 text-xs text-slate-400 cursor-pointer select-none">
           <button
             type="button"
@@ -89,15 +124,15 @@ function clearLogs() {
       ref="logContainer"
       class="flex-1 overflow-y-auto rounded-2xl border border-cyan-950/40 bg-[#0c1424]/60 p-2 font-mono text-xs space-y-1 backdrop-blur-sm"
     >
-      <div v-if="logs.length === 0" class="h-full flex flex-col items-center justify-center py-20 text-slate-500 space-y-2">
+      <div v-if="filteredLogs.length === 0" class="h-full flex flex-col items-center justify-center py-20 text-slate-500 space-y-2">
         <Activity class="w-8 h-8 text-slate-700" />
-        <p class="text-xs">暂无连接记录，开启代理后运行目标程序即可看到捕获的流量</p>
+        <p class="text-xs">{{ searchQuery ? '未找到符合过滤条件的日志' : '暂无连接记录，开启代理后运行目标程序即可看到捕获的流量' }}</p>
       </div>
 
       <div
-        v-for="log in logs"
+        v-for="log in filteredLogs"
         :key="log.id"
-        class="px-3 py-2 rounded-xl bg-slate-950/60 border border-slate-800/60 flex items-center justify-between hover:bg-slate-800/30 transition-colors"
+        class="px-3 py-2 rounded-xl bg-slate-950/60 border border-slate-800/60 flex items-center justify-between hover:bg-slate-800/30 transition-colors group"
       >
         <div class="flex items-center space-x-3 min-w-0 pr-4">
           <span class="text-slate-500 text-[11px] shrink-0 flex items-center space-x-1">
@@ -119,6 +154,29 @@ function clearLogs() {
         </div>
 
         <div class="flex items-center space-x-2.5 shrink-0">
+          <!-- Quick Add Rule actions (Shown on hover) -->
+          <div class="opacity-0 group-hover:opacity-100 flex items-center space-x-1.5 transition-opacity mr-1">
+            <button
+              v-if="log.process_name && !log.process_name.startsWith('PID:')"
+              @click="emit('addProcessRule', log.process_name)"
+              title="将此程序加入规则"
+              class="px-2 py-0.5 rounded bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-800/60 text-cyan-300 text-[10px] font-sans flex items-center space-x-1 cursor-pointer transition-colors"
+            >
+              <Pin class="w-2.5 h-2.5" />
+              <span>钉程序</span>
+            </button>
+
+            <button
+              v-if="extractDomain(log.target)"
+              @click="emit('addDomainRule', extractDomain(log.target)!)"
+              title="将此域名加入规则"
+              class="px-2 py-0.5 rounded bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-800/60 text-indigo-300 text-[10px] font-sans flex items-center space-x-1 cursor-pointer transition-colors"
+            >
+              <Globe class="w-2.5 h-2.5" />
+              <span>加域名</span>
+            </button>
+          </div>
+
           <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
             {{ log.protocol }}
           </span>

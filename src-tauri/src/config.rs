@@ -67,6 +67,7 @@ pub struct AppRule {
 pub struct AppSettings {
     pub bypass_lan: bool,
     pub block_udp_443: bool,
+    pub block_udp_53: bool,
     pub auto_start: bool,
     pub minimize_to_tray: bool,
 }
@@ -76,6 +77,7 @@ impl Default for AppSettings {
         Self {
             bypass_lan: true,
             block_udp_443: true,
+            block_udp_53: false,
             auto_start: false,
             minimize_to_tray: true,
         }
