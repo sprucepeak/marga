@@ -311,8 +311,9 @@ onMounted(async () => {
         />
 
         <!-- Advanced Settings Tab -->
-        <div v-else-if="currentTab === 'settings'" class="max-w-2xl mx-auto py-8 px-4 space-y-6">
-          <div class="bg-[#0c1424]/70 border border-cyan-950/50 rounded-2xl p-6 backdrop-blur space-y-5">
+        <div v-else-if="currentTab === 'settings'" class="h-full overflow-y-auto">
+          <div class="max-w-2xl mx-auto py-8 px-4 space-y-6">
+            <div class="bg-[#0c1424]/70 border border-cyan-950/50 rounded-2xl p-6 backdrop-blur space-y-5">
             <h3 class="text-sm font-semibold text-white pb-3 border-b border-cyan-950/60">高级流量策略设置</h3>
 
             <div class="space-y-4">
@@ -455,6 +456,7 @@ onMounted(async () => {
             </div>
           </div>
         </div>
+      </div>
       </main>
     </div>
 

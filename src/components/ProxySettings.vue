@@ -38,8 +38,9 @@ function onSave() {
 </script>
 
 <template>
-  <div class="max-w-3xl mx-auto py-6 px-4">
-    <div class="bg-[#0c1424]/70 border border-cyan-950/50 rounded-2xl p-6 backdrop-blur">
+  <div class="h-full overflow-y-auto">
+    <div class="max-w-3xl mx-auto py-6 px-4">
+      <div class="bg-[#0c1424]/70 border border-cyan-950/50 rounded-2xl p-6 backdrop-blur">
       <div class="flex items-center space-x-3 mb-6 pb-4 border-b border-cyan-950/60">
         <div class="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
           <Server class="w-5 h-5" />
@@ -146,5 +147,6 @@ function onSave() {
         </button>
       </div>
     </div>
+  </div>
   </div>
 </template>
