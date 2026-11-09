@@ -57,6 +57,11 @@ jobs:
         with:
           node-version: lts/*
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest          # 或固定版本，如 9
+
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -77,11 +82,10 @@ jobs:
             xdg-utils
 
       # ---------- 安装前端依赖 ----------
-      # 按你实际使用的包管理器二选一
       - name: Install frontend dependencies
-        run: npm install
-        # run: pnpm install --frozen-lockfile
-        # run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
+        # 如果没有 pnpm-lock.yaml，改成：
+        # run: pnpm install
 
       # ---------- 构建 + 上传到 GitHub Release ----------
       - name: Build and publish
@@ -97,7 +101,7 @@ jobs:
           releaseBody: |
             ## 下载说明
             - **Windows 安装版**：下载 `*-setup.exe`
-            - **Windows 免安装版**：下载纯 `.exe`，解压/放到任意目录直接运行
+            - **Windows 免安装版**：下载纯 `.exe`，放到任意目录直接运行
             - **macOS**：下载对应架构的 `.dmg` 或 `.app.tar.gz`
             - **Linux**：推荐 `.AppImage` 或 `.deb`
           releaseDraft: true
