@@ -15,24 +15,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # ---------- macOS Apple Silicon ----------
-          - platform: 'macos-latest'
-            args: '--target aarch64-apple-darwin'
-            name: 'macOS (Apple Silicon)'
-            uploadPlainBinary: false
-
-          # ---------- macOS Intel ----------
-          - platform: 'macos-latest'
-            args: '--target x86_64-apple-darwin'
-            name: 'macOS (Intel)'
-            uploadPlainBinary: false
-
-          # ---------- Linux x64 ----------
-          - platform: 'ubuntu-22.04'
-            args: ''
-            name: 'Linux x64'
-            uploadPlainBinary: false
-
           # ---------- Windows 安装版 (NSIS) ----------
           - platform: 'windows-latest'
             args: ''
@@ -60,50 +42,27 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: latest          # 或固定版本，如 9
+          version: 10
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      # ---------- Linux 系统依赖 ----------
-      - name: Install Linux dependencies
-        if: matrix.platform == 'ubuntu-22.04'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libwebkit2gtk-4.1-dev \
-            libappindicator3-dev \
-            librsvg2-dev \
-            patchelf \
-            libgtk-3-dev \
-            libayatana-appindicator3-dev \
-            xdg-utils
-
-      # ---------- 安装前端依赖 ----------
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
         # 如果没有 pnpm-lock.yaml，改成：
         # run: pnpm install
 
-      # ---------- 构建 + 上传到 GitHub Release ----------
       - name: Build and publish
         uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # 如果启用了 updater 签名，取消注释并配置 Secrets
-          # TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          # TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: v__VERSION__
           releaseName: 'App v__VERSION__'
           releaseBody: |
             ## 下载说明
-            - **Windows 安装版**：下载 `*-setup.exe`
-            - **Windows 免安装版**：下载纯 `.exe`，放到任意目录直接运行
-            - **macOS**：下载对应架构的 `.dmg` 或 `.app.tar.gz`
-            - **Linux**：推荐 `.AppImage` 或 `.deb`
+            - **安装版**：下载 `*-setup.exe` 安装
+            - **免安装版**：下载纯 `.exe`，放到任意目录直接运行
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
