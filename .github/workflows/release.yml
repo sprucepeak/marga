@@ -79,7 +79,7 @@ jobs:
       # ---------- 安装前端依赖 ----------
       # 按你实际使用的包管理器二选一
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm install
         # run: pnpm install --frozen-lockfile
         # run: yarn install --frozen-lockfile
 
