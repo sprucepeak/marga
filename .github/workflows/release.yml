@@ -15,17 +15,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # ---------- Windows 安装版 (NSIS) ----------
+          # ---------- Windows 安装版 ----------
           - platform: 'windows-latest'
             args: ''
             name: 'Windows Installer'
             uploadPlainBinary: false
+            # setup.exe → Marga_1.0.0_x64-setup.exe
+            # msi     → Marga_1.0.0_x64.msi
+            assetPattern: '[name]_[version]_[arch][setup].[ext]'
 
-          # ---------- Windows 免安装版 (纯 exe) ----------
+          # ---------- Windows 免安装版 ----------
           - platform: 'windows-latest'
             args: '--no-bundle'
             name: 'Windows Portable'
             uploadPlainBinary: true
+            assetPattern: '[name]_[version]_[arch]-portable.[ext]'
 
     runs-on: ${{ matrix.platform }}
     name: ${{ matrix.name }}
@@ -49,8 +53,6 @@ jobs:
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
-        # 如果没有 pnpm-lock.yaml，改成：
-        # run: pnpm install
 
       - name: Build and publish
         uses: tauri-apps/tauri-action@v1
@@ -61,9 +63,10 @@ jobs:
           releaseName: 'App v__VERSION__'
           releaseBody: |
             ## 下载说明
-            - **安装版**：下载 `*-setup.exe` 安装
-            - **免安装版**：下载纯 `.exe`，放到任意目录直接运行
+            - **安装版**：`Marga_x.x.x_x64-setup.exe` 或 `Marga_x.x.x_x64.msi`
+            - **免安装版**：`Marga_x.x.x_x64-portable.exe`
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
           uploadPlainBinary: ${{ matrix.uploadPlainBinary }}
+          releaseAssetNamePattern: ${{ matrix.assetPattern }}
