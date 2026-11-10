@@ -12,7 +12,6 @@ mod relay;
 mod sni;
 
 use commands::*;
-use config::AppConfig;
 use engine::AppEngine;
 use std::sync::Arc;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
@@ -168,13 +167,15 @@ fn main() {
             test_proxy_connection,
         ])
         .on_window_event(move |window, event| match event {
+            tauri::WindowEvent::CloseRequested { api, .. } => {
+                // Prevent window from closing, hide it to system tray instead
+                api.prevent_close();
+                let _ = window.hide();
+            }
             tauri::WindowEvent::Resized(_) => {
-                let config = AppConfig::load();
-                if config.settings.minimize_to_tray {
-                    if let Ok(is_minimized) = window.is_minimized() {
-                        if is_minimized {
-                            let _ = window.hide();
-                        }
+                if let Ok(is_minimized) = window.is_minimized() {
+                    if is_minimized {
+                        let _ = window.hide();
                     }
                 }
             }
