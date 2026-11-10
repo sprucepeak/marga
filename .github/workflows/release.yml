@@ -22,14 +22,14 @@ jobs:
             uploadPlainBinary: false
             # setup.exe → Marga_1.0.0_x64-setup.exe
             # msi     → Marga_1.0.0_x64.msi
-            assetPattern: '[name]_[version]_[arch][setup].[ext]'
+            assetPattern: 'Marga_[version]_[arch][setup][ext]'
 
           # ---------- Windows 免安装版 ----------
           - platform: 'windows-latest'
             args: '--no-bundle'
             name: 'Windows Portable'
             uploadPlainBinary: true
-            assetPattern: '[name]_[version]_[arch]-portable.[ext]'
+            assetPattern: 'Marga_[version]_[arch]-portable[ext]'
 
     runs-on: ${{ matrix.platform }}
     name: ${{ matrix.name }}
