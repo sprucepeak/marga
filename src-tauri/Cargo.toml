@@ -6,6 +6,10 @@ license = "MIT"
 edition = "2021"
 
 
+[[bin]]
+name = "Marga"
+path = "src/main.rs"
+
 [build-dependencies]
 tauri-build = { version = "2.0", features = [] }
 
@@ -48,6 +52,3 @@ windows = { version = "0.56", features = [
 # this feature is used for production builds or when `test-driver` is enabled
 custom-protocol = ["tauri/custom-protocol"]
 
-[[bin]]
-name = "Marga"
-path = "src/main.rs"
