@@ -65,7 +65,7 @@ jobs:
             ## 下载说明
             - **安装版**：`Marga_x.x.x_x64-setup.exe` 或 `Marga_x.x.x_x64.msi`
             - **免安装版**：`Marga_x.x.x_x64-portable.exe`
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
           uploadPlainBinary: ${{ matrix.uploadPlainBinary }}
