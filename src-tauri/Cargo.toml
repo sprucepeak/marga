@@ -47,3 +47,7 @@ windows = { version = "0.56", features = [
 [features]
 # this feature is used for production builds or when `test-driver` is enabled
 custom-protocol = ["tauri/custom-protocol"]
+
+[[bin]]
+name = "Marga"
+path = "src/main.rs"

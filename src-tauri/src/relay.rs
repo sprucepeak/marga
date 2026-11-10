@@ -2,7 +2,7 @@ use crate::config::AppConfig;
 use crate::interceptor::divert::OriginalTarget;
 use crate::interceptor::WinDivertInterceptor;
 use crate::proxy::{ProxyClient, Socks5Target};
-use crate::sni::parse_tls_sni;
+use crate::sni::parse_host_or_sni;
 use chrono::Local;
 use parking_lot::{Mutex, RwLock};
 use serde::{Deserialize, Serialize};
@@ -166,12 +166,12 @@ impl RelayContext {
         };
         first_buf.truncate(n);
 
-        // Attempt SNI sniffing (F-24)
-        let sni_domain = parse_tls_sni(&first_buf);
+        // Attempt SNI sniffing (TLS) or Host header sniffing (HTTP) (F-24)
+        let target_domain = parse_host_or_sni(&first_buf);
 
         // Check domain rules & app rule match status
         let is_app_matched = target_info.rule_name != "全局域名规则";
-        let is_domain_matched = if let Some(domain) = &sni_domain {
+        let is_domain_matched = if let Some(domain) = &target_domain {
             let config = self.config.read();
             config.domain_rules.iter().any(|r| r.matches(domain))
         } else {
@@ -195,17 +195,18 @@ impl RelayContext {
             return;
         }
 
-        let socks5_target = match (&sni_domain, target_info.dest_ip) {
+        let socks5_target = match (&target_domain, target_info.dest_ip) {
             (Some(domain), _) => Socks5Target::Domain(domain.clone(), target_info.dest_port),
             (None, IpAddr::V4(ip)) => Socks5Target::IPv4(ip, target_info.dest_port),
             (None, IpAddr::V6(ip)) => Socks5Target::IPv6(ip, target_info.dest_port),
         };
 
+        let is_tls = first_buf.first() == Some(&0x16);
         let log_entry = new_log(
             &target_info,
             client_port,
             &socks5_target,
-            sni_domain.is_some(),
+            is_tls,
         );
         self.emit_log(log_entry.clone());
 

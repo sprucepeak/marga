@@ -1,5 +1,54 @@
-/// Parses the Server Name Indication (SNI) from a TLS ClientHello packet.
-/// Returns Some(domain_name) if successfully found, or None.
+/// Parses HTTP Host header or TLS SNI to extract the target domain/host.
+pub fn parse_host_or_sni(payload: &[u8]) -> Option<String> {
+    if let Some(sni) = parse_tls_sni(payload) {
+        return Some(sni);
+    }
+    parse_http_host(payload)
+}
+
+/// Parses the Host header from an HTTP/1.x request payload.
+pub fn parse_http_host(payload: &[u8]) -> Option<String> {
+    if payload.len() < 14 {
+        return None;
+    }
+
+    // Check if it looks like an HTTP request method: GET, POST, HEAD, PUT, DELETE, OPTIONS, CONNECT, etc.
+    let is_http_method = payload.starts_with(b"GET ")
+        || payload.starts_with(b"POST ")
+        || payload.starts_with(b"HEAD ")
+        || payload.starts_with(b"PUT ")
+        || payload.starts_with(b"DELETE ")
+        || payload.starts_with(b"OPTIONS ")
+        || payload.starts_with(b"CONNECT ")
+        || payload.starts_with(b"PATCH ");
+
+    if !is_http_method {
+        return None;
+    }
+
+    let text = std::str::from_utf8(payload).ok()?;
+    for line in text.lines() {
+        if line.is_empty() || line == "\r" {
+            break;
+        }
+        let lower = line.to_ascii_lowercase();
+        if lower.starts_with("host:") {
+            let host_part = line[5..].trim();
+            // Strip port if present: e.g. "example.com:80" -> "example.com"
+            let host = if let Some(colon) = host_part.find(':') {
+                &host_part[..colon]
+            } else {
+                host_part
+            };
+            let trimmed = host.trim();
+            if !trimmed.is_empty() {
+                return Some(trimmed.to_string());
+            }
+        }
+    }
+
+    None
+}
 pub fn parse_tls_sni(payload: &[u8]) -> Option<String> {
     // Basic TLS Record Check:
     // Byte 0: 0x16 (Handshake record)
@@ -176,5 +225,12 @@ mod tests {
     fn test_non_tls_packet() {
         let dummy = [0x47, 0x45, 0x54, 0x20, 0x2F, 0x20]; // "GET / "
         assert_eq!(parse_tls_sni(&dummy), None);
+    }
+
+    #[test]
+    fn test_http_host_parsing() {
+        let req = b"GET /index.html HTTP/1.1\r\nHost: example.com:8080\r\nUser-Agent: curl/7.68.0\r\n\r\n";
+        assert_eq!(parse_http_host(req), Some("example.com".to_string()));
+        assert_eq!(parse_host_or_sni(req), Some("example.com".to_string()));
     }
 }

@@ -143,11 +143,14 @@ function onImportConfig() {
 
 async function onToggleAutoStart() {
   try {
-    if (config.value.settings.auto_start) {
+    const nextState = !config.value.settings.auto_start;
+    if (nextState) {
       await enable();
+      config.value.settings.auto_start = true;
       showToast('已启用开机自启');
     } else {
       await disable();
+      config.value.settings.auto_start = false;
       showToast('已关闭开机自启');
     }
     await saveAllConfig();
@@ -389,24 +392,11 @@ onMounted(async () => {
               <!-- Minimize to Tray -->
               <div class="flex items-center justify-between pt-3.5 border-t border-slate-800/60 py-1">
                 <div class="pr-6">
-                  <h4 class="text-xs font-semibold text-slate-200">最小化时隐藏至系统托盘</h4>
+                  <h4 class="text-xs font-semibold text-slate-200">关闭/最小化时隐藏至系统托盘</h4>
                   <p class="text-[11px] text-slate-400 mt-0.5">
-                    点击窗口最小化按钮时隐藏在托盘后台运行，点击关闭按钮 (X) 则退出程序
+                    点击窗口关闭 (X) 或最小化按钮时均隐藏在托盘后台运行，只有通过托盘右键菜单才退出程序
                   </p>
                 </div>
-                <button
-                  type="button"
-                  role="switch"
-                  :aria-checked="config.settings.minimize_to_tray"
-                  @click="config.settings.minimize_to_tray = !config.settings.minimize_to_tray; saveAllConfig()"
-                  class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-                  :class="config.settings.minimize_to_tray ? 'bg-cyan-500 shadow-sm shadow-cyan-500/30' : 'bg-slate-800'"
-                >
-                  <span
-                    class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out"
-                    :class="config.settings.minimize_to_tray ? 'translate-x-4' : 'translate-x-0'"
-                  />
-                </button>
               </div>
 
               <!-- Auto Start on Boot -->
