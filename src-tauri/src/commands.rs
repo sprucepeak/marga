@@ -1,7 +1,7 @@
 use crate::config::{AppConfig, ProxyConfig};
 use crate::engine::AppEngine;
 use crate::privilege::{is_admin, restart_as_admin};
-use crate::process::{ProcessInfo, ProcessManager};
+use crate::process::{ProcessInfo, ProcessManager, RunningProcessPortInfo};
 use crate::proxy::ProxyClient;
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::Ordering;
@@ -83,8 +83,34 @@ pub fn get_proxy_status(engine: State<'_, Arc<AppEngine>>) -> ProxyStatus {
 }
 
 #[tauri::command]
+pub fn minimize_window(app: AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        window.minimize().map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn hide_window(app: AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        window.hide().map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
 pub fn list_running_processes() -> Vec<ProcessInfo> {
     ProcessManager::list_running_processes()
+}
+
+#[tauri::command]
+pub fn list_process_ports() -> Vec<RunningProcessPortInfo> {
+    ProcessManager::list_process_ports()
+}
+
+#[tauri::command]
+pub fn kill_process(pid: u32) -> Result<(), String> {
+    ProcessManager::kill_process(pid)
 }
 
 #[tauri::command]

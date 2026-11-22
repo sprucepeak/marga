@@ -49,6 +49,20 @@ export interface ProcessInfo {
   path: string;
 }
 
+export interface PortInfo {
+  port: number;
+  protocol: string;
+  state: string;
+  local_addr: string;
+}
+
+export interface RunningProcessPortInfo {
+  pid: number;
+  name: string;
+  path: string;
+  ports: PortInfo[];
+}
+
 export interface ConnectionLog {
   id: string;
   timestamp: string;
