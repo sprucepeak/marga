@@ -100,14 +100,14 @@ onMounted(async () => {
         <button
           @click="handleMinimize"
           class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
-          title="最小化"
+          title="最小化到托盘 (后台运行)"
         >
           <Minus class="w-4 h-4" />
         </button>
         <button
           @click="handleClose"
           class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-rose-600/80 transition-colors cursor-pointer"
-          title="关闭窗口 (最小化到托盘)"
+          title="退出软件"
         >
           <X class="w-4 h-4" />
         </button>

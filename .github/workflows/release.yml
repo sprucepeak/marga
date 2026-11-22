@@ -1,9 +1,9 @@
-name: 'publish'
+name: "publish"
 
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
   workflow_dispatch:
 
 jobs:
@@ -16,20 +16,20 @@ jobs:
       matrix:
         include:
           # ---------- Windows 安装版 ----------
-          - platform: 'windows-latest'
-            args: ''
-            name: 'Windows Installer'
+          - platform: "windows-latest"
+            args: ""
+            name: "Windows Installer"
             uploadPlainBinary: false
             # setup.exe → Marga_1.0.0_x64-setup.exe
             # msi     → Marga_1.0.0_x64.msi
-            assetPattern: 'Marga_[version]_[arch][setup][ext]'
+            assetPattern: "Marga_[version]_[arch][setup][ext]"
 
           # ---------- Windows 免安装版 ----------
-          - platform: 'windows-latest'
-            args: '--no-bundle'
-            name: 'Windows Portable'
+          - platform: "windows-latest"
+            args: "--no-bundle"
+            name: "Windows Portable"
             uploadPlainBinary: true
-            assetPattern: 'Marga_[version]_[arch]-portable[ext]'
+            assetPattern: "Marga_[version]_[arch]-portable[ext]"
 
     runs-on: ${{ matrix.platform }}
     name: ${{ matrix.name }}
@@ -60,14 +60,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: v__VERSION__
-          releaseName: 'Marga v__VERSION__'
+          releaseName: "v__VERSION__"
           releaseBody: |
             ## Marga v__VERSION__ 发布说明
-            
+
             ### 📦 资产下载
             - **安装版**：`Marga___VERSION___x64-setup.exe` 或 `Marga___VERSION___x64.msi`
             - **免安装便携版**：`Marga___VERSION___x64-portable.exe`
-            
+
             > 本次发布版本号根据 `package.json` 自动统一生成。
           releaseDraft: false
           prerelease: false

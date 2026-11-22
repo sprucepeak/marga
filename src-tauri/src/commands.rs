@@ -99,6 +99,13 @@ pub fn hide_window(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub fn exit_app(app: AppHandle, engine: State<'_, Arc<AppEngine>>) -> Result<(), String> {
+    engine.stop();
+    app.exit(0);
+    Ok(())
+}
+
+#[tauri::command]
 pub fn list_running_processes() -> Vec<ProcessInfo> {
     ProcessManager::list_running_processes()
 }
