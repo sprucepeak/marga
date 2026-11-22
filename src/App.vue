@@ -27,16 +27,7 @@ function showToast(msg: string) {
 }
 
 async function onWindowMinimize() {
-  try {
-    await invoke('minimize_window');
-  } catch (err) {
-    console.error('Failed to minimize window:', err);
-  }
-}
-
-async function onWindowClose() {
   showToast('已最小化到系统托盘并在后台运行');
-  // Delay slightly so the user sees the in-app toast appear before hiding
   setTimeout(async () => {
     try {
       await invoke('hide_window');
@@ -44,6 +35,14 @@ async function onWindowClose() {
       console.error('Failed to hide window to tray:', err);
     }
   }, 350);
+}
+
+async function onWindowClose() {
+  try {
+    await invoke('exit_app');
+  } catch (err) {
+    console.error('Failed to exit app:', err);
+  }
 }
 
 const config = ref<AppConfig>({

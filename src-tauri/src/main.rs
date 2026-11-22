@@ -165,6 +165,7 @@ fn main() {
             get_proxy_status,
             minimize_window,
             hide_window,
+            exit_app,
             list_running_processes,
             list_process_ports,
             kill_process,
