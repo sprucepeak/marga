@@ -13,7 +13,8 @@ use windows::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, Process32FirstW, Process32NextW, PROCESSENTRY32W, TH32CS_SNAPPROCESS,
 };
 use windows::Win32::System::Threading::{
-    OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION,
+    OpenProcess, QueryFullProcessImageNameW, TerminateProcess, PROCESS_NAME_WIN32,
+    PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_TERMINATE,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -27,6 +28,22 @@ pub struct ProcessInfo {
     pub pid: u32,
     pub name: String,
     pub path: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PortInfo {
+    pub port: u16,
+    pub protocol: String,
+    pub state: String,
+    pub local_addr: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RunningProcessPortInfo {
+    pub pid: u32,
+    pub name: String,
+    pub path: String,
+    pub ports: Vec<PortInfo>,
 }
 
 pub struct ProcessManager;
@@ -217,7 +234,148 @@ impl ProcessManager {
             .map(|(_, pid)| pid)
     }
 
-    /// Check if a process path or its parent tree matches any configured rules.
+    /// Terminate a process by PID.
+    pub fn kill_process(pid: u32) -> Result<(), String> {
+        if pid <= 4 {
+            return Err("无法关闭系统核心进程".to_string());
+        }
+        unsafe {
+            let handle = OpenProcess(PROCESS_TERMINATE, false, pid)
+                .map_err(|e| format!("打开进程失败 (PID: {}): {}", pid, e))?;
+            let res = TerminateProcess(handle, 1);
+            let _ = CloseHandle(handle);
+            res.map_err(|e| format!("终止进程失败 (PID: {}): {}", pid, e))
+        }
+    }
+
+    /// List all listening/active TCP/UDP network endpoints grouped by process.
+    pub fn list_process_ports() -> Vec<RunningProcessPortInfo> {
+        let mut pid_ports: HashMap<u32, Vec<PortInfo>> = HashMap::new();
+
+        // 1. Fetch IPv4 TCP
+        if let Some(buf) = Self::fetch_owner_table(Transport::Tcp, AF_INET.0 as u32) {
+            let count = buf[0] as usize;
+            let rows = buf[1..].as_ptr() as *const MIB_TCPROW_OWNER_PID;
+            let slice = unsafe { std::slice::from_raw_parts(rows, count) };
+            for r in slice {
+                let port = u16::from_be(r.dwLocalPort as u16);
+                let pid = r.dwOwningPid;
+                let state_str = match r.dwState {
+                    2 => "LISTEN",
+                    5 => "ESTABLISHED",
+                    3 => "SYN_SENT",
+                    4 => "SYN_RCVD",
+                    6 => "FIN_WAIT1",
+                    7 => "FIN_WAIT2",
+                    8 => "CLOSE_WAIT",
+                    9 => "CLOSING",
+                    10 => "LAST_ACK",
+                    11 => "TIME_WAIT",
+                    12 => "DELETE_TCB",
+                    _ => "UNKNOWN",
+                };
+                let ip_bytes = r.dwLocalAddr.to_ne_bytes();
+                let ip_str = format!("{}.{}.{}.{}", ip_bytes[0], ip_bytes[1], ip_bytes[2], ip_bytes[3]);
+                pid_ports.entry(pid).or_default().push(PortInfo {
+                    port,
+                    protocol: "TCP".to_string(),
+                    state: state_str.to_string(),
+                    local_addr: ip_str,
+                });
+            }
+        }
+
+        // 2. Fetch IPv6 TCP
+        if let Some(buf) = Self::fetch_owner_table(Transport::Tcp, AF_INET6.0 as u32) {
+            let count = buf[0] as usize;
+            let rows = buf[1..].as_ptr() as *const MIB_TCP6ROW_OWNER_PID;
+            let slice = unsafe { std::slice::from_raw_parts(rows, count) };
+            for r in slice {
+                let port = u16::from_be(r.dwLocalPort as u16);
+                let pid = r.dwOwningPid;
+                let state_str = match r.dwState {
+                    2 => "LISTEN",
+                    5 => "ESTABLISHED",
+                    _ => "OTHER",
+                };
+                pid_ports.entry(pid).or_default().push(PortInfo {
+                    port,
+                    protocol: "TCP6".to_string(),
+                    state: state_str.to_string(),
+                    local_addr: "[::]".to_string(),
+                });
+            }
+        }
+
+        // 3. Fetch IPv4 UDP
+        if let Some(buf) = Self::fetch_owner_table(Transport::Udp, AF_INET.0 as u32) {
+            let count = buf[0] as usize;
+            let rows = buf[1..].as_ptr() as *const MIB_UDPROW_OWNER_PID;
+            let slice = unsafe { std::slice::from_raw_parts(rows, count) };
+            for r in slice {
+                let port = u16::from_be(r.dwLocalPort as u16);
+                let pid = r.dwOwningPid;
+                let ip_bytes = r.dwLocalAddr.to_ne_bytes();
+                let ip_str = format!("{}.{}.{}.{}", ip_bytes[0], ip_bytes[1], ip_bytes[2], ip_bytes[3]);
+                pid_ports.entry(pid).or_default().push(PortInfo {
+                    port,
+                    protocol: "UDP".to_string(),
+                    state: "-".to_string(),
+                    local_addr: ip_str,
+                });
+            }
+        }
+
+        // 4. Fetch IPv6 UDP
+        if let Some(buf) = Self::fetch_owner_table(Transport::Udp, AF_INET6.0 as u32) {
+            let count = buf[0] as usize;
+            let rows = buf[1..].as_ptr() as *const MIB_UDP6ROW_OWNER_PID;
+            let slice = unsafe { std::slice::from_raw_parts(rows, count) };
+            for r in slice {
+                let port = u16::from_be(r.dwLocalPort as u16);
+                let pid = r.dwOwningPid;
+                pid_ports.entry(pid).or_default().push(PortInfo {
+                    port,
+                    protocol: "UDP6".to_string(),
+                    state: "-".to_string(),
+                    local_addr: "[::]".to_string(),
+                });
+            }
+        }
+
+        // Get process names and paths
+        let mut results = Vec::new();
+        for (pid, mut ports) in pid_ports {
+            if pid <= 4 {
+                continue;
+            }
+            // Sort ports, deduplicate if identical
+            ports.sort_by_key(|p| p.port);
+            ports.dedup_by(|a, b| a.port == b.port && a.protocol == b.protocol && a.local_addr == b.local_addr);
+
+            let path = Self::get_process_path(pid).unwrap_or_default();
+            let name = if !path.is_empty() {
+                Path::new(&path)
+                    .file_name()
+                    .and_then(|f| f.to_str())
+                    .unwrap_or("")
+                    .to_string()
+            } else {
+                format!("PID {}", pid)
+            };
+
+            results.push(RunningProcessPortInfo {
+                pid,
+                name,
+                path,
+                ports,
+            });
+        }
+
+        // Sort by name
+        results.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+        results
+    }
     pub fn matches_rules(
         pid: u32,
         rules: &[AppRule],

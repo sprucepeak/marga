@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ShieldAlert, ShieldCheck, Play, Square, Loader2 } from 'lucide-vue-next';
+import { ref, onMounted } from 'vue';
+import { getVersion } from '@tauri-apps/api/app';
+import { ShieldAlert, ShieldCheck, Play, Square, Loader2, Minus, X } from 'lucide-vue-next';
 
 defineProps<{
   isRunning: boolean;
@@ -10,7 +12,27 @@ defineProps<{
 const emit = defineEmits<{
   (e: 'toggleProxy'): void;
   (e: 'restartAdmin'): void;
+  (e: 'minimize'): void;
+  (e: 'close'): void;
 }>();
+
+const appVersion = ref('');
+
+async function handleMinimize() {
+  emit('minimize');
+}
+
+async function handleClose() {
+  emit('close');
+}
+
+onMounted(async () => {
+  try {
+    appVersion.value = await getVersion();
+  } catch (err) {
+    console.error('Failed to get app version:', err);
+  }
+});
 </script>
 
 <template>
@@ -25,7 +47,9 @@ const emit = defineEmits<{
       <div>
         <div class="flex items-center space-x-2">
           <h1 class="text-base font-bold text-white tracking-wide">Marga</h1>
-          <span class="text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded bg-cyan-950/50 text-cyan-300/80 border border-cyan-800/40">v1.0.0</span>
+          <span class="text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded bg-cyan-950/50 text-cyan-300/80 border border-cyan-800/40">
+            v{{ appVersion || '1.0.0' }}
+          </span>
         </div>
         <p class="text-xs text-slate-400">指定软件与域名，独享专属代理通道</p>
       </div>
@@ -71,6 +95,23 @@ const emit = defineEmits<{
         </template>
         <span>{{ isRunning ? '停止代理' : '启动代理' }}</span>
       </button>
+      <!-- Window Controls -->
+      <div class="flex items-center pl-3 border-l border-slate-800 space-x-1">
+        <button
+          @click="handleMinimize"
+          class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+          title="最小化"
+        >
+          <Minus class="w-4 h-4" />
+        </button>
+        <button
+          @click="handleClose"
+          class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-rose-600/80 transition-colors cursor-pointer"
+          title="关闭窗口 (最小化到托盘)"
+        >
+          <X class="w-4 h-4" />
+        </button>
+      </div>
     </div>
   </header>
 </template>

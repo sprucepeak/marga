@@ -9,14 +9,42 @@ import ProcessList from './components/ProcessList.vue';
 import ProxySettings from './components/ProxySettings.vue';
 import LogViewer from './components/LogViewer.vue';
 import DomainList from './components/DomainList.vue';
-import { ListFilter, Globe, Server, Activity, Settings2, CheckCircle2, Download, Upload } from 'lucide-vue-next';
+import PortManager from './components/PortManager.vue';
+import { ListFilter, Globe, Network, Server, Activity, Settings2, CheckCircle2, Download, Upload } from 'lucide-vue-next';
 
-const currentTab = ref<'rules' | 'domains' | 'proxy' | 'logs' | 'settings'>('rules');
+const currentTab = ref<'rules' | 'domains' | 'ports' | 'proxy' | 'logs' | 'settings'>('rules');
 
 const isRunning = ref(false);
 const isAdmin = ref(false);
 const isStarting = ref(false);
 const toast = ref<string | null>(null);
+
+function showToast(msg: string) {
+  toast.value = msg;
+  setTimeout(() => {
+    toast.value = null;
+  }, 3000);
+}
+
+async function onWindowMinimize() {
+  try {
+    await invoke('minimize_window');
+  } catch (err) {
+    console.error('Failed to minimize window:', err);
+  }
+}
+
+async function onWindowClose() {
+  showToast('已最小化到系统托盘并在后台运行');
+  // Delay slightly so the user sees the in-app toast appear before hiding
+  setTimeout(async () => {
+    try {
+      await invoke('hide_window');
+    } catch (err) {
+      console.error('Failed to hide window to tray:', err);
+    }
+  }, 350);
+}
 
 const config = ref<AppConfig>({
   proxy: {
@@ -35,13 +63,6 @@ const config = ref<AppConfig>({
     minimize_to_tray: true,
   },
 });
-
-function showToast(msg: string) {
-  toast.value = msg;
-  setTimeout(() => {
-    toast.value = null;
-  }, 3000);
-}
 
 async function loadData() {
   try {
@@ -223,6 +244,8 @@ onMounted(async () => {
       :is-starting="isStarting"
       @toggle-proxy="onToggleProxy"
       @restart-admin="onRestartAdmin"
+      @minimize="onWindowMinimize"
+      @close="onWindowClose"
     />
 
     <!-- Main Content Area -->
@@ -249,6 +272,17 @@ onMounted(async () => {
         >
           <Globe class="w-4 h-4" />
           <span>域名规则 ({{ (config.domain_rules || []).length }})</span>
+        </button>
+
+        <button
+          @click="currentTab = 'ports'"
+          class="flex items-center space-x-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all cursor-pointer"
+          :class="currentTab === 'ports' 
+            ? 'bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 font-semibold shadow-sm shadow-cyan-500/10' 
+            : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'"
+        >
+          <Network class="w-4 h-4" />
+          <span>端口管理</span>
         </button>
 
         <button
@@ -299,6 +333,10 @@ onMounted(async () => {
           :rules="config.domain_rules || []"
           @update:rules="config.domain_rules = $event"
           @save="saveAllConfig"
+        />
+
+        <PortManager
+          v-else-if="currentTab === 'ports'"
         />
 
         <ProxySettings 
