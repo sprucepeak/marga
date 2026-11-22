@@ -60,11 +60,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: v__VERSION__
-          releaseName: 'App v__VERSION__'
+          releaseName: 'Marga v__VERSION__'
           releaseBody: |
-            ## 下载说明
-            - **安装版**：`Marga_x.x.x_x64-setup.exe` 或 `Marga_x.x.x_x64.msi`
-            - **免安装版**：`Marga_x.x.x_x64-portable.exe`
+            ## Marga v__VERSION__ 发布说明
+            
+            ### 📦 资产下载
+            - **安装版**：`Marga___VERSION___x64-setup.exe` 或 `Marga___VERSION___x64.msi`
+            - **免安装便携版**：`Marga___VERSION___x64-portable.exe`
+            
+            > 本次发布版本号根据 `package.json` 自动统一生成。
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}

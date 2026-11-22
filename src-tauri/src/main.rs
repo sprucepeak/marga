@@ -163,7 +163,11 @@ fn main() {
             start_proxy,
             stop_proxy,
             get_proxy_status,
+            minimize_window,
+            hide_window,
             list_running_processes,
+            list_process_ports,
+            kill_process,
             test_proxy_connection,
         ])
         .on_window_event(move |window, event| match event {
@@ -171,13 +175,6 @@ fn main() {
                 // Prevent window from closing, hide it to system tray instead
                 api.prevent_close();
                 let _ = window.hide();
-            }
-            tauri::WindowEvent::Resized(_) => {
-                if let Ok(is_minimized) = window.is_minimized() {
-                    if is_minimized {
-                        let _ = window.hide();
-                    }
-                }
             }
             tauri::WindowEvent::Destroyed => {
                 // Ensure interceptor handle and sockets are cleanly dropped on close

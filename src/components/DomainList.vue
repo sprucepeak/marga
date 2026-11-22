@@ -193,4 +193,3 @@ function getMatchTypeName(type: DomainMatchType): string {
     </div>
   </div>
 </template>
-
